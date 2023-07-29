@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="javascript/myjs.js" charset = "utf-8"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <script src="https://kit.fontawesome.com/f6755f2459.js" crossorigin="anonymous"></script>
+    <title>Document</title>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <!--<button id = 'btnCreate'>New Game</button>-->
+    <button id = 'btnJoin'>Join Game</button>
+    <button id = 'btnStart'>Start Game</button>
+    <input type = 'text' id = 'txtGameId'>
+    <div id  = 'divPlayers'></div>
+    <div id="questions"></div>
+
+</body>
+<script>
+
+
+//HTML elements
+
+
+    let clientId = null;
+    let gameId = null;
+    let game = null;
+    let userId =getCoookieInfo('member_login');
+    let user =getCoookieInfo('member_user_name');
+    //const btnCreate = document.getElementById("btnCreate");
+    const btnJoin = document.getElementById("btnJoin");
+    const txtGameId = document.getElementById("txtGameId");
+    const divPlayers = document.getElementById("divPlayers");
+    console.log(location.host)
+    
+    let HOST = "";
+    console.log(location.host);
+    if(location.host=='localhost:3000'){
+        HOST = "ws://"+location.host;
+    }
+    else{
+        HOST = location.origin.replace(/^http/, 'wss').replaceAll('www.','');
+    }
+    
+    console.log(HOST)
+    var ws = new WebSocket(HOST);
+   // var ws = new WebSocket("ws://"+location.host+":3000");
+    ws.onopen = () =>console.log('open');
+    //let ws = wsRef;
+    //wiring eventss
+/*
+    btnCreate.addEventListener("click", e => {
+
+        const payLoad = {
+            "method": "create",
+            "clientId": clientId
+        }
+
+        ws.send(JSON.stringify(payLoad));
+
+    })
+*/
+    btnJoin.addEventListener("click", e => {
+        console.log(userId)
+        if (gameId === null)
+            gameId = txtGameId.value;
+
+        const payLoad = {
+            "method": "join",
+            "clientId": clientId,
+            "userId": userId,
+            "userName": user,
+            "gameId": gameId
+        }
+
+        ws.send(JSON.stringify(payLoad));
+
+    })
+    btnStart.addEventListener("click", e => {
+
+        const payLoad = {
+            "method": "start",
+            "clientId": clientId,
+            "game": game
+            
+        }
+
+        ws.send(JSON.stringify(payLoad));
+
+    })
+    ws.onmessage = message => {
+        //message.data
+        const response = JSON.parse(message.data);
+        console.log(response);
+        //connect
+        if (response.method === "connect"){
+            clientId = response.clientId;
+            console.log("Client id Set successfully " + clientId)
+            btnJoin.click()
+        }
+        //create
+        if (response.method === "create"){
+            gameId = response.game.id;
+            console.log("game successfully created with id " + response.game.id)  
+            btnJoin.click()
+        }
+        //join
+        if (response.method === "join"){
+            game = response.game;
+
+            while(divPlayers.firstChild)
+                divPlayers.removeChild (divPlayers.firstChild)
+
+            game.users.forEach (u => {
+                const d = document.createElement("div");
+                d.style.width = "200px";
+                d.textContent = u;
+                divPlayers.appendChild(d);
+            })            
+        }
+        //update
+        if (response.method === "update"){
+            console.log("Game update sent successfully: "+response.game.questions)
+        
+        }
+    }
+    function getCoookieInfo(name){
+        var cookieArr =document.cookie.split(";");
+        for(var i = 0; i < cookieArr.length; i++) {
+            var cookiePair = cookieArr[i].split("=");
+            
+            //Removing whitespace at the beginning of the cookie name
+            //and compare it with the given string 
+            if(name == cookiePair[0].trim()) {
+                // Decode the cookie value and return
+                var item= decodeURIComponent(cookiePair[1]);
+                }
+        }
+        return item;
+    }
+
+</script>
+</html>
