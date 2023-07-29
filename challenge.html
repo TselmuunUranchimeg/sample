@@ -37,15 +37,13 @@
     console.log(location.host)
     
     let HOST = "";
-    console.log(location.host);
     if(location.host=='localhost:3000'){
         HOST = "ws://"+location.host;
     }
     else{
-        HOST = location.origin.replace(/^http/, 'wss').replaceAll('www.','');
+        HOST = location.origin.replace(/^https/, 'wss').replaceAll('www.','');
     }
     
-    console.log(HOST)
     var ws = new WebSocket(HOST);
    // var ws = new WebSocket("ws://"+location.host+":3000");
     ws.onopen = () =>console.log('open');
